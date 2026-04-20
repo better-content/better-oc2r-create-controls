@@ -1,38 +1,26 @@
-# Settlement Roads
+# ComputerBridge
 
-Deterministic, scenario-driven settlement road and bridge planning for Forge 1.20.1.
+Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting surface through OpenComputers II: Reimagined devices.
 
-This repository contains the mod implementation and its execution docs:
+## Current scope
 
-- [SPEC.md](/home/gerald/mcmods/worldpaths/SPEC.md)
-- [TESTPLAN.md](/home/gerald/mcmods/worldpaths/TESTPLAN.md)
-- [docs/DEBUG_SCENARIOS.md](/home/gerald/mcmods/worldpaths/docs/DEBUG_SCENARIOS.md)
-- [docs/VISUAL_CHECKLIST.md](/home/gerald/mcmods/worldpaths/docs/VISUAL_CHECKLIST.md)
-- [CHANGELOG.md](/home/gerald/mcmods/worldpaths/CHANGELOG.md)
+- Build and package scaffolding for `computerbridge`
+- Create + OC2R dependency wiring
+- Phase 1 kinetic device scaffolding
+- OC2R block-device provider registration
+- Polling event bridge for `speed_change`, `stress_change`, and `overstressed`
+- Source audit and API inventory docs
 
-The current design bias is:
+## Commands
 
-- deterministic synthetic scenes over natural worldgen
-- world-state assertions over screenshots
-- planning separated from placement
-- persistence via Overworld `SavedData`
-- data-driven compatibility via tags and config
+```bash
+./gradlew build
+./gradlew runClient
+./gradlew runGameTestServer
+```
 
-Current implementation slice:
+## Notes
 
-- mod metadata, code namespace, and resources now consistently use `settlementroads`
-- legacy `fissionreactor` sources, assets, tests, and dependency baggage have been removed
-- core planner/domain/storage scaffolding exists in `src/main/kotlin`
-- deterministic synthetic scenarios now drive both debug commands and GameTests
-- route planning can choose a bridge over a short shallow-water span or detour around a too-wide crossing
-- debug placement renders road rings, 3-wide roads, stone-brick bridge decks, parapet walls, and support columns
-- deterministic JVM tests cover clustering, rings, route selection, palette choice, bridge support logic, chunk indexing, and save-data round trips
-- in-world GameTests cover grassy bridge placement, rocky palette selection, cave support descent, wide-river detours, and rerun idempotence
-- debug commands register `/settlementroads debug spawn_scenario`, `plan_here`, `place_here`, and `clear_here`
-
-Immediate implementation entry points:
-
-- `./gradlew test`
-- `./gradlew build`
-- `./gradlew runGameTestServer`
-- `./gradlew runData`
+- The project is pinned to Create `6.0.8` on Forge `1.20.1`.
+- The OC2R dependency is pinned to Modrinth release `2.2.12`, which was the latest listed `1.20.1` Forge release on 2026-04-09.
+- Phase 1 currently covers the kinetic/control surfaces described in `spec.md`.

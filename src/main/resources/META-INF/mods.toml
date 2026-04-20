@@ -32,3 +32,17 @@ mandatory=true
 versionRange="[${kotlinForForgeVersion},)"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.${modId}]]
+modId="create"
+mandatory=true
+versionRange="[${createReleaseVersion},6.1.0)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${modId}]]
+modId="oc2r"
+mandatory=true
+versionRange="[${oc2rVersion},)"
+ordering="AFTER"
+side="BOTH"

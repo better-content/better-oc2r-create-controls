@@ -7,5 +7,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "worldpaths"
-
+rootProject.name = "computerbridge"

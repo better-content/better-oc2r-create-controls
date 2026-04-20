@@ -11,6 +11,12 @@ plugins {
 val minecraftVersion = property("minecraft_version") as String
 val forgeVersion = property("forge_version") as String
 val kotlinForForgeVersion = property("kotlinforforge_version") as String
+val createReleaseVersion = property("create_release_version") as String
+val createMavenVersion = property("create_maven_version") as String
+val ponderVersion = property("ponder_version") as String
+val flywheelVersion = property("flywheel_version") as String
+val registrateVersion = property("registrate_version") as String
+val oc2rVersion = property("oc2r_version") as String
 val modId = property("mod_id") as String
 val modName = property("mod_name") as String
 val modVersion = property("mod_version") as String
@@ -48,8 +54,6 @@ minecraft {
             property("forge.logging.markers", "REGISTRIES")
             property("forge.logging.console.level", "info")
             property("forge.enabledGameTestNamespaces", modId)
-            property("mixin.env.remapRefMap", "true")
-            property("mixin.env.refMapRemappingFile", file("build/createSrgToMcp/output.srg").absolutePath)
 
             mods {
                 create(modId) {
@@ -65,37 +69,34 @@ minecraft {
         }
 
         create("gameTestServer")
-
-        create("data") {
-            args(
-                "--mod", modId,
-                "--all",
-                "--output", file("src/generated/resources").absolutePath,
-                "--existing", file("src/main/resources").absolutePath
-            )
-        }
     }
-}
-
-sourceSets.named("main") {
-    resources.srcDir("src/generated/resources")
-}
-
-val syncGameTestStructures by tasks.registering(Copy::class) {
-    from("gameteststructures")
-    into(file("run/gameteststructures"))
 }
 
 repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net")
     maven("https://thedarkcolour.github.io/KotlinForForge/")
+    maven("https://maven.createmod.net")
+    maven("https://maven.ithundxr.dev/mirror")
+    maven("https://api.modrinth.com/maven") {
+        content {
+            includeGroup("maven.modrinth")
+        }
+    }
 }
 
 dependencies {
     minecraft("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
 
     implementation("thedarkcolour:kotlinforforge:$kotlinForForgeVersion")
+    implementation(deobf("com.simibubi.create:create-$minecraftVersion:$createMavenVersion:slim"))
+    implementation(deobf("net.createmod.ponder:Ponder-Forge-$minecraftVersion:$ponderVersion"))
+    compileOnly(deobf("dev.engine-room.flywheel:flywheel-forge-api-$minecraftVersion:$flywheelVersion"))
+    runtimeOnly(deobf("dev.engine-room.flywheel:flywheel-forge-$minecraftVersion:$flywheelVersion"))
+    implementation(deobf("com.tterrag.registrate:Registrate:$registrateVersion"))
+
+    compileOnly(deobf("maven.modrinth:F1gm4RsH:$oc2rVersion"))
+    runtimeOnly(deobf("maven.modrinth:F1gm4RsH:$oc2rVersion"))
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
@@ -106,6 +107,8 @@ tasks.processResources {
         "minecraftVersion" to minecraftVersion,
         "forgeVersion" to forgeVersion,
         "kotlinForForgeVersion" to kotlinForForgeVersion,
+        "createReleaseVersion" to createReleaseVersion,
+        "oc2rVersion" to oc2rVersion,
         "modId" to modId,
         "modName" to modName,
         "modVersion" to modVersion,
@@ -131,8 +134,4 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-}
-
-tasks.matching { it.name == "prepareRunGameTestServer" }.configureEach {
-    dependsOn(syncGameTestStructures)
 }
