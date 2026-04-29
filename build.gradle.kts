@@ -4,6 +4,7 @@ plugins {
     idea
     eclipse
     `maven-publish`
+    jacoco
     id("org.jetbrains.kotlin.jvm") version "1.9.25"
     id("net.minecraftforge.gradle") version "[6.0,6.2)"
 }
@@ -134,4 +135,40 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            element = "CLASS"
+            includes = listOf(
+                "com.gerald.computerbridge.compat.events.SpeedometerEventTracker",
+                "com.gerald.computerbridge.compat.events.StressometerEventTracker"
+            )
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
