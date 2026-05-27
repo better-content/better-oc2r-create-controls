@@ -31,6 +31,10 @@ object CreateEventBridge {
             return
         }
 
+        tickTrackedSources()
+    }
+
+    internal fun tickTrackedSources() {
         val iterator = trackedSources.iterator()
         while (iterator.hasNext()) {
             val source = iterator.next()
@@ -44,6 +48,10 @@ object CreateEventBridge {
 
     @SubscribeEvent
     fun handleServerStopped(@Suppress("UNUSED_PARAMETER") event: ServerStoppedEvent) {
+        trackedSources.clear()
+    }
+
+    internal fun clearTrackedSourcesForTests() {
         trackedSources.clear()
     }
 }

@@ -18,6 +18,9 @@ val ponderVersion = property("ponder_version") as String
 val flywheelVersion = property("flywheel_version") as String
 val registrateVersion = property("registrate_version") as String
 val oc2rVersion = property("oc2r_version") as String
+val architecturyVersion = property("architectury_version") as String
+val markdownManualProjectId = property("markdown_manual_project_id") as String
+val markdownManualFileId = property("markdown_manual_file_id") as String
 val modId = property("mod_id") as String
 val modName = property("mod_name") as String
 val modVersion = property("mod_version") as String
@@ -55,6 +58,8 @@ minecraft {
             property("forge.logging.markers", "REGISTRIES")
             property("forge.logging.console.level", "info")
             property("forge.enabledGameTestNamespaces", modId)
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
 
             mods {
                 create(modId) {
@@ -76,6 +81,8 @@ minecraft {
 repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net")
+    maven("https://cursemaven.com")
+    maven("https://maven.architectury.dev/")
     maven("https://thedarkcolour.github.io/KotlinForForge/")
     maven("https://maven.createmod.net")
     maven("https://maven.ithundxr.dev/mirror")
@@ -92,12 +99,15 @@ dependencies {
     implementation("thedarkcolour:kotlinforforge:$kotlinForForgeVersion")
     implementation(deobf("com.simibubi.create:create-$minecraftVersion:$createMavenVersion:slim"))
     implementation(deobf("net.createmod.ponder:Ponder-Forge-$minecraftVersion:$ponderVersion"))
+    implementation("io.github.llamalad7:mixinextras-forge:0.5.4")
     compileOnly(deobf("dev.engine-room.flywheel:flywheel-forge-api-$minecraftVersion:$flywheelVersion"))
     runtimeOnly(deobf("dev.engine-room.flywheel:flywheel-forge-$minecraftVersion:$flywheelVersion"))
     implementation(deobf("com.tterrag.registrate:Registrate:$registrateVersion"))
 
     compileOnly(deobf("maven.modrinth:F1gm4RsH:$oc2rVersion"))
     runtimeOnly(deobf("maven.modrinth:F1gm4RsH:$oc2rVersion"))
+    runtimeOnly(deobf("dev.architectury:architectury-forge:$architecturyVersion"))
+    runtimeOnly(deobf("curse.maven:markdownmanual-$markdownManualProjectId:$markdownManualFileId"))
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
@@ -171,4 +181,13 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+val syncGameTestStructures by tasks.registering(Copy::class) {
+    from(layout.projectDirectory.dir("src/main/resources/gameteststructures"))
+    into(layout.projectDirectory.dir("run/gameteststructures"))
+}
+
+tasks.matching { it.name == "prepareRunGameTestServer" }.configureEach {
+    dependsOn(syncGameTestStructures)
 }
