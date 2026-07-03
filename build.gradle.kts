@@ -143,9 +143,32 @@ tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions.jvmTarget = "17"
 }
 
+tasks.named<Jar>("jar") {
+    finalizedBy("reobfJar")
+}
+
+val stageRuntimeJar by tasks.registering(Copy::class) {
+    group = "build"
+    description = "Stages the reobfuscated runtime jar into build/libs using the canonical release filename."
+    dependsOn(tasks.named("reobfJar"))
+    from(layout.buildDirectory.file("reobfJar/output.jar"))
+    into(layout.buildDirectory.dir("libs"))
+    rename { "${base.archivesName.get()}-$version.jar" }
+}
+
+tasks.named("assemble") {
+    dependsOn(stageRuntimeJar)
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.register("headlessGameTest") {
+    group = "verification"
+    description = "Runs Forge game tests in a headless dedicated server."
+    dependsOn(tasks.named("runGameTestServer"))
 }
 
 tasks.jacocoTestReport {
