@@ -9,17 +9,18 @@ Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting
 - Polling event bridge for `speed_change`, `stress_change`, and `overstressed`
 - Runtime-safe error reporting for unsupported block entities
 
-## Build
+## Verification
 
 ```bash
-./gradlew build
+./gradlew verifyFast
+./gradlew verifyFull
+./gradlew stageRuntimeJar
 ```
 
 ## Dev
 
 ```bash
 ./gradlew runClient
-./gradlew runGameTestServer
 ```
 
 ## Compatibility
