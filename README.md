@@ -30,3 +30,7 @@ Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting
 - KotlinForForge `4.11.0`
 - Create `6.0.8`
 - OC2R `2.2.12`
+
+## Community and support
+
+For modpack and mod discussion, playtest feedback, and bug reports, join the [Better Content Discord](https://discord.gg/EkRnZbzqS9).
