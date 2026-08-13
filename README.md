@@ -1,4 +1,4 @@
-# ComputerBridge
+# OC2R Create Bridge
 
 Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting surface through OpenComputers II: Reimagined devices.
 
@@ -26,7 +26,7 @@ Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting
 ## Compatibility
 
 - Minecraft `1.20.1`
-- Forge `47.4.10`
+- Forge `47.4.13`
 - KotlinForForge `4.11.0`
 - Create `6.0.8`
 - OC2R `2.2.12`
@@ -34,3 +34,7 @@ Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting
 ## Community and support
 
 For modpack and mod discussion, playtest feedback, and bug reports, join the [Better Content Discord](https://discord.gg/EkRnZbzqS9).
+
+## Identity
+
+The clean-break canonical identity is repository/artifact `oc2r-create-bridge`, mod ID `oc2r_create_bridge`, and Maven group `com.bettercontent`. Legacy `computerbridge` identifiers are not migrated.

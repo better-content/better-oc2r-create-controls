@@ -7,4 +7,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "computerbridge"
+rootProject.name = "oc2r-create-bridge"

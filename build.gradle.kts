@@ -33,7 +33,7 @@ group = property("mod_group") as String
 version = modVersion
 
 base {
-    archivesName.set(modId)
+    archivesName.set("oc2r-create-bridge")
 }
 
 fun deobf(notation: String): Any =
@@ -198,8 +198,8 @@ tasks.jacocoTestCoverageVerification {
         rule {
             element = "CLASS"
             includes = listOf(
-                "com.gerald.computerbridge.compat.events.SpeedometerEventTracker",
-                "com.gerald.computerbridge.compat.events.StressometerEventTracker"
+                "com.bettercontent.oc2rcreatebridge.compat.events.SpeedometerEventTracker",
+                "com.bettercontent.oc2rcreatebridge.compat.events.StressometerEventTracker"
             )
             limit {
                 counter = "LINE"
