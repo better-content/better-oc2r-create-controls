@@ -184,6 +184,14 @@ tasks.register("verifyFull") {
     dependsOn(tasks.named("headlessGameTest"))
 }
 
+val resetGameTestWorld = tasks.register<Delete>("resetGameTestWorld") {
+    delete(layout.projectDirectory.dir("run/world"))
+}
+
+tasks.matching { it.name.startsWith("prepareRunGameTestServer") }.configureEach {
+    dependsOn(resetGameTestWorld)
+}
+
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
