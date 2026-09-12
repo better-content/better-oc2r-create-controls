@@ -18,6 +18,8 @@ class CreativeMotorDevice(
 
     @Callback
     fun setGeneratedSpeed(@Parameter("speed") speed: Int) {
+        val before = adapter.getGeneratedSpeed()
         adapter.setGeneratedSpeed(speed)
+        com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "setGeneratedSpeed", before, adapter.getGeneratedSpeed())
     }
 }

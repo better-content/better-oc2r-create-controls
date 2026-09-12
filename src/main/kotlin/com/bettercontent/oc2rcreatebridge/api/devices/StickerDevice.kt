@@ -19,11 +19,26 @@ class StickerDevice(
     fun isAttachedToBlock(): Boolean = adapter.isAttachedToBlock()
 
     @Callback
-    fun extend(): Boolean = adapter.extend()
+    fun extend(): Boolean {
+        val before = adapter.isExtended()
+        val accepted = adapter.extend()
+        if (accepted) com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "extend", before, adapter.isExtended())
+        return accepted
+    }
 
     @Callback
-    fun retract(): Boolean = adapter.retract()
+    fun retract(): Boolean {
+        val before = adapter.isExtended()
+        val accepted = adapter.retract()
+        if (accepted) com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "retract", before, adapter.isExtended())
+        return accepted
+    }
 
     @Callback
-    fun toggle(): Boolean = adapter.toggle()
+    fun toggle(): Boolean {
+        val before = adapter.isExtended()
+        val accepted = adapter.toggle()
+        if (accepted) com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "toggle", before, adapter.isExtended())
+        return accepted
+    }
 }

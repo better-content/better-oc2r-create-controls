@@ -18,6 +18,8 @@ class RotationSpeedControllerDevice(
 
     @Callback
     fun setTargetSpeed(@Parameter("speed") speed: Int) {
+        val before = adapter.getTargetSpeed()
         adapter.setTargetSpeed(speed)
+        com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "setTargetSpeed", before, adapter.getTargetSpeed())
     }
 }

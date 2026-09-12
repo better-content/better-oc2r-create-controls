@@ -18,7 +18,9 @@ class SequencedGearshiftDevice(
         @Parameter("angle") angle: Int,
         @Parameter("modifier") modifier: Int? = null
     ) {
+        val wasRunning = adapter.isRunning()
         adapter.rotate(angle, modifier ?: 1)
+        com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "rotate", wasRunning, adapter.isRunning())
     }
 
     @Callback
@@ -26,7 +28,9 @@ class SequencedGearshiftDevice(
         @Parameter("distance") distance: Int,
         @Parameter("modifier") modifier: Int? = null
     ) {
+        val wasRunning = adapter.isRunning()
         adapter.move(distance, modifier ?: 1)
+        com.bettercontent.oc2rcreatebridge.api.events.MachineOperationEvent.changed(blockEntity, "move", wasRunning, adapter.isRunning())
     }
 
     @Callback
