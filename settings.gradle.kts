@@ -7,4 +7,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "oc2r-create-bridge"
+rootProject.name = "better-oc2r-create-controls"

@@ -1,4 +1,4 @@
-# OC2R Create Bridge
+# Better OC2R Create Controls
 
 Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting surface through OpenComputers II: Reimagined devices.
 
@@ -37,4 +37,4 @@ For modpack and mod discussion, playtest feedback, and bug reports, join the [Be
 
 ## Identity
 
-The clean-break canonical identity is repository/artifact `oc2r-create-bridge`, mod ID `oc2r_create_bridge`, and Maven group `com.bettercontent`. Legacy `computerbridge` identifiers are not migrated.
+The clean-break canonical identity is repository/artifact `better-oc2r-create-controls`, mod ID `better_oc2r_create_controls`, and Maven group `com.bettercontent`. Legacy `computerbridge` identifiers are not migrated.

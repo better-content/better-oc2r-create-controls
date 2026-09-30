@@ -4,7 +4,7 @@
 
 ### Added
 
-- Initial release of `oc2r_create_bridge` for Forge `1.20.1`.
+- Initial release of `better_oc2r_create_controls` for Forge `1.20.1`.
 - OC2R block-device providers for Create kinetic/control blocks:
   - `creative_motor`
   - `rotation_speed_controller`
@@ -20,8 +20,8 @@
 
 ### Packaging
 
-- Cleaned release artifact to include only `oc2r_create_bridge` code and metadata.
+- Cleaned release artifact to include only `better_oc2r_create_controls` code and metadata.
 
 ## Unreleased
 
-- Normalize the project identity to `oc2r-create-bridge / oc2r_create_bridge (formerly computerbridge)`; this is a clean break with no legacy aliases or migrations.
+- Normalize the project identity to `better-oc2r-create-controls / better_oc2r_create_controls (formerly computerbridge)`; this is a clean break with no legacy aliases or migrations.
