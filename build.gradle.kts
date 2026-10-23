@@ -196,6 +196,15 @@ val prepareNativeSedna by tasks.registering(Copy::class) {
 }
 dependencies { add(nativeFixture.compileOnlyConfigurationName, files(layout.buildDirectory.file("native-dependencies/sedna.jar"))) }
 tasks.named(nativeFixture.compileJavaTaskName) { dependsOn(prepareNativeSedna) }
+val verifyNativeFixtureNamespace by tasks.registering(Exec::class) {
+    dependsOn(nativeFixture.classesTaskName)
+    commandLine("python3", "-B", "scripts/verify_native_fixture_namespace.py", "--classes",
+        layout.buildDirectory.dir("classes/java/nativeFixture").get().asFile.absolutePath,
+        "--resources", layout.buildDirectory.dir("resources/nativeFixture").get().asFile.absolutePath)
+}
+tasks.matching { it.name.startsWith("prepareRunGameTestServer") }.configureEach {
+    dependsOn(verifyNativeFixtureNamespace)
+}
 val verifyPinnedOc2r by tasks.registering(Exec::class) {
     group = "verification"
     inputs.files(pinnedOc2r)

@@ -1,4 +1,6 @@
-package com.bettercontent.betteroc2rcreatecontrols.nativefixture;
+package com.bettercontent.betteroc2rcreatecontrols.nativefixture.mixin;
+
+import com.bettercontent.betteroc2rcreatecontrols.nativefixture.Oc2rCompatibilityTests;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
