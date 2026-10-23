@@ -60,7 +60,7 @@ public final class Oc2rCompatibilityTests {
         proof.put("archive_sha256", ARCHIVE);
         proof.put("target_class_sha256", TARGET);
         Path loaded = net.minecraftforge.fml.ModList.get().getModFileById("better_compat_fixes").getFile().getFilePath();
-        Path provider = Path.of(Objects.requireNonNull(System.getenv("BC_CUSTOM_MOD_JAR_DIR")), "better-compat-fixes-0.1.0.jar");
+        Path provider = Path.of(Objects.requireNonNull(System.getenv("BC_CUSTOM_MOD_JAR_DIR")), "better-compat-fixes-0.1.9.jar");
         try (var actual = new java.util.zip.ZipFile(loaded.toFile()); var canonical = new java.util.zip.ZipFile(provider.toFile())) {
             // These MC-free repair classes/config and source identity must survive ForgeGradle remapping exactly.
             for (String name : List.of("com/bettercontent/bettercompatfixes/mixin/oc2r/EchoPayloadMixin.class",

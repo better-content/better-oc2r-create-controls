@@ -15,7 +15,7 @@ and negative diagnostic/population controls without Minecraft. Retain complete p
 builds, libraries, fixtures and evidence before any authorized clean/reset.
 
 The native invocation requires `BC_CUSTOM_MOD_JAR_DIR` containing the canonically verified
-`better-compat-fixes-0.1.0.jar` (the owning production echo repair) and its mandatory
+`better-compat-fixes-0.1.9.jar` (the owning production echo repair) and its mandatory
 `better-gameplay-notices-1.0.0.jar` provider. ForgeGradle remaps those exact provider inputs;
 there is no older-artifact fallback. `verifyPinnedOc2r` reproducibly resolves the declared
 OC2R 2.2.12 Maven input and verifies the published archive, native implementation sites,
@@ -33,6 +33,12 @@ A CREATE_NEW `oc2r-compat-proof.json` binds the fresh directory, pinned inputs, 
 identity and capability results; its digest must occur exactly once in the retained native
 log. Missing proof, partial tests, another logger/path/message, duplicate diagnostics,
 corrupt native libraries, native data mismatch and failed fallback operations still fail.
+Only after all own native assertions/audits succeed, a CREATE_NEW
+`build/compatibility/oc2r-compatibility.json` support bundle embeds the proof, original
+source-fixture receipt, exact parsed four-test/lifecycle observations, and original proof/log
+paths with post-JVM hashes. An existing export is retained under a unique prior name, not
+overwritten. No execution/cleanup verdict is fabricated: the canonical owner must independently
+validate process exit and complete descendant cleanup before admitting the support artifact.
 These source changes have not yet been compiled or run natively; source contracts alone
 are not native or full-pack acceptance.
 

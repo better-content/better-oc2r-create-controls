@@ -32,7 +32,7 @@ def validateCompatibilityProof = { File directory, String text ->
             proof.compat_provider_sha256 != receipt.compat_provider_sha256 ||
             !(proof.compat_provider_sha256 ==~ /[a-f0-9]{64}/) ||
             !(proof.compat_loaded_provider_sha256 ==~ /[a-f0-9]{64}/) ||
-            proof.compat_provider_sha256 != sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.0.jar').bytes) ||
+            proof.compat_provider_sha256 != sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.9.jar').bytes) ||
             proof.network != [echo_snapshot:true, caller_consumed:true, udp_roundtrip:true, tcp_roundtrip:true] ||
             proof.filesystems != [rootfs_sha256:'cf46784e33abfe678c5635a73deb6b3e8cf1b888492475ad8ba4eccc8902574b',
                 scripts_zip_sha256:'34066cda83ea2b274fb0b27d03391ae190b067d6d13cc12af7795b8802cbba85', all_descriptors_loaded:true])
@@ -79,7 +79,7 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
             working_directory: directory.absolutePath, expected_native_tests: expectedNativeTests,
             mode: expectedNativeTests == 0 ? 'dedicated_startup_smoke' : 'authored_gametests',
             old_world_absent: true, old_latest_log_absent: true,
-            compat_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.0.jar').bytes),
+            compat_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.9.jar').bytes),
             notices_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-gameplay-notices-1.0.0.jar').bytes)
         ])) + '\n'
         prepareNativeProperties(new File(directory, 'server.properties'))
@@ -98,7 +98,41 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
         verifyNativeDiagnostics(log.text, validatedProof)
         if (!log.text.contains('mod=' + project.property('mod_id') + ' event=logging.status'))
             throw new GradleException('Missing own structured native startup status')
-        logger.lifecycle('Verified actual native population=' + expectedNativeTests + '; unclassified ERROR/FATAL=0; exact OC2R compatibility proof bound; original audit retained')
+        def directory = configuredNativeDirectory()
+        def nativeLogs = [log, new File(directory, 'logs/debug.log')]
+        if (!nativeLogs.every { it.isFile() }) throw new GradleException('Missing original native latest/debug logs')
+        nativeLogs.each { original -> verifyNativeDiagnostics(original.text, validatedProof) }
+        def writeNewJson = { File destination, Object value ->
+            java.nio.file.Files.writeString(destination.toPath(), groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(value)) + '\n', java.nio.file.StandardOpenOption.CREATE_NEW)
+        }
+        // No execution.json producer exists here. Export the parsed native observations only;
+        // canonical outer process-exit/descendant cleanup remains independently mandatory.
+        def observations = [schema:'bc.oc2r_native_observations.v1', expected_tests:expectedNativeTests,
+            completed_tests:(log.text =~ /(?m)^.*?=+ (\d+) GAME TESTS COMPLETE =+.*$/).collect { it[1].toInteger() },
+            required_passed:(log.text =~ /(?m)^.*?All (\d+) required tests passed.*$/).collect { it[1].toInteger() },
+            startup_observed:log.text.contains('Started game test server'),
+            shutdown_observed:log.text.contains('Game test server shutting down')]
+        def proofFile = new File(directory, 'oc2r-compat-proof.json')
+        def receiptFile = new File(directory, 'source-fixture.json')
+        def describe = { File input -> [path:input.canonicalPath, sha256:sha256(input.bytes)] }
+        def bundle = [schema:'bc.oc2r_compatibility_bundle.v1',
+            native_proof:new groovy.json.JsonSlurper().parse(proofFile),
+            proof:describe(proofFile), source_fixture:new groovy.json.JsonSlurper().parse(receiptFile),
+            source_fixture_artifact:describe(receiptFile), native_observations:observations,
+            native_logs:nativeLogs.collect { describe(it) }]
+        def output = layout.buildDirectory.file('compatibility/oc2r-compatibility.json').get().asFile
+        output.parentFile.mkdirs()
+        if (java.nio.file.Files.isSymbolicLink(output.toPath()) || java.nio.file.Files.isSymbolicLink(output.parentFile.toPath()) ||
+                !output.parentFile.canonicalPath.startsWith(layout.buildDirectory.get().asFile.canonicalPath + File.separator))
+            throw new GradleException('Unsafe OC2R support destination')
+        if (output.exists()) {
+            if (!output.isFile()) throw new GradleException('Invalid prior OC2R support artifact')
+            def retained = new File(output.parentFile, 'prior-' + UUID.randomUUID() + '-oc2r-compatibility.json')
+            java.nio.file.Files.move(output.toPath(), retained.toPath())
+        }
+        writeNewJson(output, bundle)
+        logger.lifecycle('Verified actual native population=' + expectedNativeTests + '; unclassified ERROR/FATAL=0; exact OC2R compatibility proof bound; original audit retained; support=' + output)
     }
 }
 

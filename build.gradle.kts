@@ -154,7 +154,7 @@ val nativeFixture by sourceSets.creating {
     runtimeClasspath += output + compileClasspath + sourceSets.main.get().runtimeClasspath
 }
 val compatProviderDirectory = providers.environmentVariable("BC_CUSTOM_MOD_JAR_DIR")
-val compatProviderJar = compatProviderDirectory.map { file("$it/better-compat-fixes-0.1.0.jar") }
+val compatProviderJar = compatProviderDirectory.map { file("$it/better-compat-fixes-0.1.9.jar") }
 val noticesProviderJar = compatProviderDirectory.map { file("$it/better-gameplay-notices-1.0.0.jar") }
 repositories.flatDir {
     name = "canonicalControlsProviders"
@@ -164,7 +164,7 @@ repositories.flatDir {
 configurations[nativeFixture.implementationConfigurationName].extendsFrom(configurations.implementation.get())
 configurations[nativeFixture.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
 dependencies {
-    add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-compat-fixes:0.1.0"))
+    add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-compat-fixes:0.1.9"))
     add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-gameplay-notices:1.0.0"))
 }
 minecraft.runs.named("gameTestServer") {
@@ -179,7 +179,7 @@ tasks.named<JavaExec>("runGameTestServer") {
     dependsOn(tasks.named(nativeFixture.classesTaskName), "verifyPinnedOc2r")
     doFirst {
         check(compatProviderDirectory.isPresent && compatProviderJar.get().isFile && noticesProviderJar.get().isFile) {
-            "Native Controls requires canonical BC_CUSTOM_MOD_JAR_DIR/better-compat-fixes-0.1.0.jar"
+            "Native Controls requires canonical BC_CUSTOM_MOD_JAR_DIR/better-compat-fixes-0.1.9.jar"
         }
         ZipFile(compatProviderJar.get()).use { zip ->
             check(zip.getEntry("better_compat_fixes.oc2r.mixins.json") != null) { "Compat provider lacks OC2R repair" }
