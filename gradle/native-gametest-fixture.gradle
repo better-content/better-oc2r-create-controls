@@ -1,5 +1,5 @@
 // Reviewed authored native population; update with actual test additions/removals.
-def expectedNativeTests = 2
+def expectedNativeTests = 4
 
 def nativeRun = minecraft.runs.getByName('gameTestServer')
 def fixtureRoot = layout.buildDirectory.dir('gametest').get().asFile.canonicalFile
@@ -20,9 +20,41 @@ def prepareNativeProperties = { File properties ->
         properties.text = '# Fresh source GameTest fixture: native defaults, no overrides.\n'
     }
 }
-def verifyNativeDiagnostics = { String text ->
-    def failures = text.readLines().findAll { (it =~ /\[[^\]\r\n]*\/(?:ERROR|FATAL)\]/).find() }
-    if (failures) throw new GradleException('Native ERROR/FATAL requires diagnosis: ' + failures.join('\n'))
+def sha256 = { byte[] bytes -> java.security.MessageDigest.getInstance('SHA-256').digest(bytes).encodeHex().toString() }
+def validateCompatibilityProof = { File directory, String text ->
+    def proofFile = new File(directory, 'oc2r-compat-proof.json')
+    if (!proofFile.isFile()) throw new GradleException('Missing fresh OC2R functional proof')
+    def proof = new groovy.json.JsonSlurper().parse(proofFile)
+    def receipt = new groovy.json.JsonSlurper().parse(new File(directory, 'source-fixture.json'))
+    if (proof.schema != 'bc.oc2r_compat_proof.v1' || proof.fixture_directory != directory.canonicalPath ||
+            proof.archive_sha256 != 'd6c42cffda0fa16734e14e26013320b4f1a05278544dd5c5b8d05914bfbb8632' ||
+            proof.target_class_sha256 != '6f4a8b9c92b79f26695b3f21525e3c6c7649f16bb05903c11c8ce0e6d74bf0b8' ||
+            proof.compat_provider_sha256 != receipt.compat_provider_sha256 ||
+            !(proof.compat_provider_sha256 ==~ /[a-f0-9]{64}/) ||
+            !(proof.compat_loaded_provider_sha256 ==~ /[a-f0-9]{64}/) ||
+            proof.compat_provider_sha256 != sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.0.jar').bytes) ||
+            proof.network != [echo_snapshot:true, caller_consumed:true, udp_roundtrip:true, tcp_roundtrip:true] ||
+            proof.filesystems != [rootfs_sha256:'cf46784e33abfe678c5635a73deb6b3e8cf1b888492475ad8ba4eccc8902574b',
+                scripts_zip_sha256:'34066cda83ea2b274fb0b27d03391ae190b067d6d13cc12af7795b8802cbba85', all_descriptors_loaded:true])
+        throw new GradleException('Invalid OC2R functional proof binding/capabilities')
+    def marker = 'BC_OC2R_COMPAT_V1 proof_sha256=' + sha256(proofFile.bytes)
+    if (text.readLines().count { it.endsWith(marker) } != 1) throw new GradleException('Missing/duplicate native OC2R proof digest')
+    true
+}
+def capabilityMessage = 'Loaded native library successfully but ICMP still failed, falling back to JVM UDP implementation'
+def readmeMessage = 'Invalid path in pack: oc2r:file_systems/README.md, ignoring'
+def verifyNativeDiagnostics = { String text, boolean validatedProof = false ->
+    def errors = text.readLines().findAll { (it =~ /\[[^\]\r\n]*\/(?:ERROR|FATAL)\]/).find() }
+    def counts = [capability:0, readme:0]
+    def failures = errors.findAll { line ->
+        if (validatedProof && line.endsWith('] [li.cil.oc2.common.Main.NativeLoader/]: ' + capabilityMessage) &&
+                (line =~ /\[modloading-worker-\d+\/ERROR\]/).find()) { counts.capability++; return false }
+        if (validatedProof && line.endsWith('] [net.minecraft.Util/]: ' + readmeMessage) &&
+                (line =~ /\[Worker-Main-\d+\/ERROR\]/).find()) { counts.readme++; return false }
+        true
+    }
+    if (failures || counts.values().any { it > 1 })
+        throw new GradleException('Native ERROR/FATAL requires diagnosis: ' + (failures ?: errors).join('\n'))
 }
 def verifyNativeCompletion = { String text, int expected ->
     if (!text.contains('Started game test server') || !text.contains('Game test server shutting down'))
@@ -46,7 +78,9 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
         new File(directory, 'source-fixture.json').text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
             working_directory: directory.absolutePath, expected_native_tests: expectedNativeTests,
             mode: expectedNativeTests == 0 ? 'dedicated_startup_smoke' : 'authored_gametests',
-            old_world_absent: true, old_latest_log_absent: true
+            old_world_absent: true, old_latest_log_absent: true,
+            compat_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.0.jar').bytes),
+            notices_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-gameplay-notices-1.0.0.jar').bytes)
         ])) + '\n'
         prepareNativeProperties(new File(directory, 'server.properties'))
         copy {
@@ -59,11 +93,12 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     doLast {
         def log = new File(configuredNativeDirectory(), 'logs/latest.log')
         if (!log.isFile()) throw new GradleException('Missing actual native log: ' + log)
-        verifyNativeDiagnostics(log.text)
         verifyNativeCompletion(log.text, expectedNativeTests)
+        def validatedProof = validateCompatibilityProof(configuredNativeDirectory(), log.text)
+        verifyNativeDiagnostics(log.text, validatedProof)
         if (!log.text.contains('mod=' + project.property('mod_id') + ' event=logging.status'))
             throw new GradleException('Missing own structured native startup status')
-        logger.lifecycle('Verified actual native population=' + expectedNativeTests + '; ERROR/FATAL=0; fresh RunConfig fixture retained')
+        logger.lifecycle('Verified actual native population=' + expectedNativeTests + '; unclassified ERROR/FATAL=0; exact OC2R compatibility proof bound; original audit retained')
     }
 }
 
@@ -86,6 +121,24 @@ tasks.register('verifyNativeGameTestFixtureGuard') {
             try { verifyNativeDiagnostics(invalid) } catch (GradleException expected) { rejected = true }
             if (!rejected) throw new GradleException('Diagnostic guard accepted synthetic failure')
         }
+        def capability = '[00:00:00] [modloading-worker-0/ERROR] [li.cil.oc2.common.Main.NativeLoader/]: ' + capabilityMessage
+        def readme = '[00:00:00] [Worker-Main-0/ERROR] [net.minecraft.Util/]: ' + readmeMessage
+        verifyNativeDiagnostics(capability + '\n' + readme, true)
+        [capability, readme, capability.replace('NativeLoader', 'Other'), readme.replace('README.md', 'rootfs.json'),
+         '[00:00:00] [main/ERROR] [li.cil.oc2.common.inet.DefaultSessionLayer/]: Failed to get echo response',
+         capability + '\n' + capability].each { invalid ->
+            boolean rejected = false
+            try { verifyNativeDiagnostics(invalid, invalid != capability && invalid != readme) }
+            catch (GradleException expected) { rejected = true }
+            if (!rejected) throw new GradleException('Compatibility guard accepted unproven/changed/repeated failure')
+        }
+        def proofDirectory = properties.parentFile
+        new File(proofDirectory, 'source-fixture.json').text = '{}'
+        new File(proofDirectory, 'oc2r-compat-proof.json').text = '{}'
+        boolean invalidProofRejected = false
+        try { validateCompatibilityProof(proofDirectory, '') }
+        catch (GradleException expected) { invalidProofRejected = true }
+        if (!invalidProofRejected) throw new GradleException('Malformed/unbound functional proof accepted')
         def lifecycle = 'Started game test server\nGame test server shutting down\n'
         def success = lifecycle + '========= 3 GAME TESTS COMPLETE =========\nAll 3 required tests passed :)\n'
         verifyNativeCompletion(success, 3)

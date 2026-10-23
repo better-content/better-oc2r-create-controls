@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.zip.ZipFile
 
 plugins {
     idea
@@ -146,6 +147,62 @@ tasks.withType<KotlinCompile>().configureEach {
 tasks.named<Jar>("jar") {
     finalizedBy("reobfJar")
 }
+
+// Nonshipping controls are attached only to the dedicated native launcher.
+val nativeFixture by sourceSets.creating {
+    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    runtimeClasspath += output + compileClasspath + sourceSets.main.get().runtimeClasspath
+}
+val compatProviderDirectory = providers.environmentVariable("BC_CUSTOM_MOD_JAR_DIR")
+val compatProviderJar = compatProviderDirectory.map { file("$it/better-compat-fixes-0.1.0.jar") }
+val noticesProviderJar = compatProviderDirectory.map { file("$it/better-gameplay-notices-1.0.0.jar") }
+repositories.flatDir {
+    name = "canonicalControlsProviders"
+    dirs(compatProviderDirectory.orElse(layout.projectDirectory.dir("missing-canonical-providers").asFile.absolutePath))
+    content { includeGroup("bettercontent.local.controls") }
+}
+configurations[nativeFixture.implementationConfigurationName].extendsFrom(configurations.implementation.get())
+configurations[nativeFixture.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
+dependencies {
+    add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-compat-fixes:0.1.0"))
+    add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-gameplay-notices:1.0.0"))
+}
+minecraft.runs.named("gameTestServer") {
+    mods { named(modId) { source(nativeFixture) } }
+    args("--mixin.config", "better_oc2r_create_controls.native_fixture.mixins.json")
+}
+tasks.withType<org.gradle.api.tasks.bundling.AbstractArchiveTask>().configureEach {
+    exclude("**/nativefixture/**", "better_oc2r_create_controls.native_fixture.mixins.json")
+}
+tasks.named<JavaExec>("runGameTestServer") {
+    classpath += nativeFixture.runtimeClasspath
+    dependsOn(tasks.named(nativeFixture.classesTaskName), "verifyPinnedOc2r")
+    doFirst {
+        check(compatProviderDirectory.isPresent && compatProviderJar.get().isFile && noticesProviderJar.get().isFile) {
+            "Native Controls requires canonical BC_CUSTOM_MOD_JAR_DIR/better-compat-fixes-0.1.0.jar"
+        }
+        ZipFile(compatProviderJar.get()).use { zip ->
+            check(zip.getEntry("better_compat_fixes.oc2r.mixins.json") != null) { "Compat provider lacks OC2R repair" }
+        }
+    }
+}
+
+val pinnedOc2r by configurations.creating
+dependencies { add(pinnedOc2r.name, "maven.modrinth:F1gm4RsH:$oc2rVersion") }
+val prepareNativeSedna by tasks.registering(Copy::class) {
+    dependsOn("verifyPinnedOc2r")
+    from({ zipTree(pinnedOc2r.singleFile) }) { include("META-INF/jarjar/sedna.jar"); eachFile { path = name }; includeEmptyDirs = false }
+    into(layout.buildDirectory.dir("native-dependencies"))
+}
+dependencies { add(nativeFixture.compileOnlyConfigurationName, files(layout.buildDirectory.file("native-dependencies/sedna.jar"))) }
+tasks.named(nativeFixture.compileJavaTaskName) { dependsOn(prepareNativeSedna) }
+val verifyPinnedOc2r by tasks.registering(Exec::class) {
+    group = "verification"
+    inputs.files(pinnedOc2r)
+    inputs.file("scripts/verify_oc2r.py")
+    doFirst { commandLine("python3", "-B", "scripts/verify_oc2r.py", "--archive", pinnedOc2r.singleFile.absolutePath) }
+}
+tasks.matching { it.name == "verifyFast" }.configureEach { dependsOn(verifyPinnedOc2r) }
 
 val stageRuntimeJar by tasks.registering(Copy::class) {
     group = "build"
