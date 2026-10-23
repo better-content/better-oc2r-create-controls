@@ -174,8 +174,8 @@ minecraft.runs.named("gameTestServer") {
 tasks.withType<org.gradle.api.tasks.bundling.AbstractArchiveTask>().configureEach {
     exclude("**/nativefixture/**", "better_oc2r_create_controls.native_fixture.mixins.json")
 }
-tasks.named<JavaExec>("runGameTestServer") {
-    classpath += nativeFixture.runtimeClasspath
+tasks.matching { it.name == "runGameTestServer" }.configureEach {
+    (this as JavaExec).classpath += nativeFixture.runtimeClasspath
     dependsOn(tasks.named(nativeFixture.classesTaskName), "verifyPinnedOc2r")
     doFirst {
         check(compatProviderDirectory.isPresent && compatProviderJar.get().isFile && noticesProviderJar.get().isFile) {
@@ -225,7 +225,7 @@ tasks.withType<Test>().configureEach {
 tasks.register("headlessGameTest") {
     group = "verification"
     description = "Runs Forge game tests in a headless dedicated server."
-    dependsOn(tasks.named("runGameTestServer"))
+    dependsOn("runGameTestServer")
 }
 
 tasks.register("verifyFast") {
