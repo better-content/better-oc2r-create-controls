@@ -21,13 +21,26 @@ abstract class BaseEventDevice<T : BlockEntity>(
         if (firstSubscriber) {
             primeEventState()
             CreateEventBridge.track(this)
+            observeSubscription("first_subscriber")
         }
     }
 
     override fun unsubscribe(sink: IEventSink) {
-        subscribers.remove(sink)
+        val removed = subscribers.remove(sink)
         if (subscribers.isEmpty()) {
             CreateEventBridge.untrack(this)
+            if (removed != null) observeSubscription("last_subscriber_removed")
+        }
+    }
+
+    private fun observeSubscription(reason: String) {
+        val log = com.bettercontent.betteroc2rcreatecontrols.diagnostics.PlaytestDiagnostics.LOG
+        if (!log.enabled("subscriptions")) return
+        val level = blockEntity.level ?: return
+        if (level.isClientSide) return
+        log.debug("subscriptions", "rpc.subscription", com.bettercontent.betteroc2rcreatecontrols.diagnostics.PlaytestLog.Context.server(
+            level.dimension().location().toString(), level.gameTime), "observed", reason) {
+            com.bettercontent.betteroc2rcreatecontrols.diagnostics.PlaytestLog.fields("pos_long", blockEntity.blockPos.asLong(), "subscribers", subscribers.size)
         }
     }
 

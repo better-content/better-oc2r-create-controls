@@ -184,13 +184,8 @@ tasks.register("verifyFull") {
     dependsOn(tasks.named("headlessGameTest"))
 }
 
-val resetGameTestWorld = tasks.register<Delete>("resetGameTestWorld") {
-    delete(layout.projectDirectory.dir("run/world"))
-}
-
-tasks.matching { it.name.startsWith("prepareRunGameTestServer") }.configureEach {
-    dependsOn(resetGameTestWorld)
-}
+// Source native tests use a fresh UUID RunConfig, never Delete(run/world).
+apply(from = "gradle/native-gametest-fixture.gradle")
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
@@ -227,11 +222,4 @@ tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
-val syncGameTestStructures by tasks.registering(Copy::class) {
-    from(layout.projectDirectory.dir("src/main/resources/gameteststructures"))
-    into(layout.projectDirectory.dir("run/gameteststructures"))
-}
-
-tasks.matching { it.name == "prepareRunGameTestServer" }.configureEach {
-    dependsOn(syncGameTestStructures)
-}
+// Native structures are copied to the authoritative RunConfig by the fixture script.
