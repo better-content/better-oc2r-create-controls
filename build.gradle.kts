@@ -164,9 +164,12 @@ repositories.flatDir {
 configurations[nativeFixture.implementationConfigurationName].extendsFrom(configurations.implementation.get())
 configurations[nativeFixture.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
 dependencies {
+    add(nativeFixture.compileOnlyConfigurationName, "io.github.llamalad7:mixinextras-common:0.5.4")
+    add(nativeFixture.annotationProcessorConfigurationName, "io.github.llamalad7:mixinextras-common:0.5.4")
     add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-compat-fixes:0.1.9"))
     add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-gameplay-notices:1.0.0"))
 }
+nativeFixture.runtimeClasspath = nativeFixture.runtimeClasspath.filter { it.name != "mixinextras-common-0.5.4.jar" }
 minecraft.runs.named("gameTestServer") {
     mods { named(modId) { source(nativeFixture) } }
     args("--mixin.config", "better_oc2r_create_controls.native_fixture.mixins.json")
