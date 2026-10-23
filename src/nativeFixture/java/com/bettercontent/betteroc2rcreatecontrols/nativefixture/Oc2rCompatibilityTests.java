@@ -195,22 +195,27 @@ public final class Oc2rCompatibilityTests {
     @GameTest(template = "blank", timeoutTicks = 400)
     public static void nativeFilesystemDescriptorsLoadAllBytes(GameTestHelper helper) throws Exception {
         var manager = FileSystems._resourceManager;
-        var descriptors = manager.listResources("file_systems", id -> id.toString().endsWith(".json"));
-        require(descriptors.keySet().equals(Set.of(new ResourceLocation("oc2r", "file_systems/rootfs.json"),
-                new ResourceLocation("oc2r", "file_systems/scripts.json"))), "Unexpected/missing filesystem descriptor population");
-        for (var descriptor : descriptors.entrySet()) {
-            String expected = descriptor.getKey().getPath().endsWith("rootfs.json")
+        // Same entire effective preparse .json inventory returned to the native loader, not a second scan.
+        var descriptors = FilesystemDescriptorInventory.requireSingleCapture();
+        require(descriptors.equals(Set.of("oc2r:file_systems/rootfs.json",
+                "oc2r:file_systems/scripts.json")), "Unexpected/missing filesystem descriptor population");
+        for (String descriptor : descriptors) {
+            String expected = descriptor.endsWith("rootfs.json")
                     ? "223d3da31c8595cf9a83053ef612266386ce99cd4be023fe0282474d676ebdbe"
                     : "118f89e3aa16256c7bc07c2dd7147f05a9aec8dbf6a7e8af3d657e78fcc756f7";
-            try (InputStream input = descriptor.getValue().open()) {
+            try (InputStream input = manager.getResource(new ResourceLocation(descriptor)).orElseThrow().open()) {
                 require(sha(input.readAllBytes()).equals(expected), "Native descriptor bytes mismatch");
             }
         }
         var block = FileSystems.getBlockData().get(new ResourceLocation("oc2r", "file_systems/rootfs.dsk"));
         require(block != null && block == FileSystems.getBlockByName("rootfs"), "Native rootfs not registered");
         require(block.getBlockDevice().getCapacity() == 8388608, "Native rootfs capacity mismatch");
-        try (InputStream input = block.getBlockDevice().getInputStream()) {
-            require(sha(input.readAllBytes()).equals(ROOTFS), "Native rootfs bytes mismatch");
+        // Pinned Sedna's stream returns -1 for a zero-length bulk read. JDK17 readAllBytes
+        // probes that case at an 8192-byte boundary; transferTo uses positive-size reads.
+        try (InputStream input = block.getBlockDevice().getInputStream();
+             ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
+            input.transferTo(bytes);
+            require(sha(bytes.toByteArray()).equals(ROOTFS), "Native rootfs bytes mismatch");
         }
         byte[] scripts;
         try (InputStream input = manager.getResource(new ResourceLocation("oc2r", "file_systems/scripts.zip")).orElseThrow().open()) {
