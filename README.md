@@ -60,11 +60,7 @@ its logger profile/`bc.playtest.level`. Common six-case and RPC projection/priva
 run with the source gate. Mutation observation is not downstream event-sink delivery or
 save durability; existing native exceptions and domain events remain authoritative.
 
-## Scope and authority
-
-This repository owns its mod-specific behavior and authoring inputs. Read [local instructions](AGENTS.md)
-and the [shared documentation/policy index](../../better-content-modpack/docs/README.md).
-
+## Scope
 
 Forge `1.20.1` Kotlin mod that exposes Create's documented CC: Tweaked scripting surface through OpenComputers II: Reimagined devices.
 
