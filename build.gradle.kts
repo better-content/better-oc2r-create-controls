@@ -155,7 +155,7 @@ val nativeFixture by sourceSets.creating {
 }
 val compatProviderDirectory = providers.environmentVariable("BC_CUSTOM_MOD_JAR_DIR")
 val compatProviderJar = compatProviderDirectory.map { file("$it/better-compat-fixes-0.1.9.jar") }
-val noticesProviderJar = compatProviderDirectory.map { file("$it/better-gameplay-notices-1.0.0.jar") }
+val noticesProviderJar = compatProviderDirectory.map { file("$it/better-gameplay-notices-1.0.1.jar") }
 repositories.flatDir {
     name = "canonicalControlsProviders"
     dirs(compatProviderDirectory.orElse(layout.projectDirectory.dir("missing-canonical-providers").asFile.absolutePath))
@@ -167,7 +167,7 @@ dependencies {
     add(nativeFixture.compileOnlyConfigurationName, "io.github.llamalad7:mixinextras-common:0.5.4")
     add(nativeFixture.annotationProcessorConfigurationName, "io.github.llamalad7:mixinextras-common:0.5.4")
     add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-compat-fixes:0.1.9"))
-    add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-gameplay-notices:1.0.0"))
+    add(nativeFixture.runtimeOnlyConfigurationName, deobf("bettercontent.local.controls:better-gameplay-notices:1.0.1"))
 }
 nativeFixture.runtimeClasspath = nativeFixture.runtimeClasspath.filter { it.name != "mixinextras-common-0.5.4.jar" }
 minecraft.runs.named("gameTestServer") {

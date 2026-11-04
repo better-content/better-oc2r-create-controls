@@ -80,7 +80,7 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
             mode: expectedNativeTests == 0 ? 'dedicated_startup_smoke' : 'authored_gametests',
             old_world_absent: true, old_latest_log_absent: true,
             compat_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-compat-fixes-0.1.9.jar').bytes),
-            notices_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-gameplay-notices-1.0.0.jar').bytes)
+            notices_provider_sha256: sha256(new File(System.getenv('BC_CUSTOM_MOD_JAR_DIR') ?: '', 'better-gameplay-notices-1.0.1.jar').bytes)
         ])) + '\n'
         prepareNativeProperties(new File(directory, 'server.properties'))
         copy {
