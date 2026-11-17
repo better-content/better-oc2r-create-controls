@@ -34,5 +34,10 @@ class SpeedometerEventTrackerTest {
             tracker.poll(64f, true)
         )
         assertEquals(emptyList(), tracker.poll(64f, true))
+        assertEquals(
+            listOf(CreatePeripheralEvent("speed_change", mapOf("speed" to 64f))),
+            tracker.poll(64f, false)
+        )
+        assertEquals(emptyList(), tracker.poll(64f, false))
     }
 }
